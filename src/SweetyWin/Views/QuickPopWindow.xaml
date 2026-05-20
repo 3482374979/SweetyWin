@@ -1,0 +1,39 @@
+<Window x:Class="SweetyWin.Views.QuickPopWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="SweetyWin QuickPop"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        ShowInTaskbar="False"
+        Topmost="True"
+        Background="Transparent"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="NoResize"
+        Focusable="False"
+        ShowActivated="False"
+        Visibility="Hidden">
+
+    <!-- 패널 본체 — 둥근 모서리 + 반투명 배경. WPF Acrylic 효과는 SourceInitialized 에서 별도 적용 가능. -->
+    <Border CornerRadius="14"
+            Background="{StaticResource PaletteBackground}"
+            BorderBrush="{StaticResource PaletteBorder}"
+            BorderThickness="1"
+            Padding="8,6"
+            SnapsToDevicePixels="True"
+            UseLayoutRounding="True">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.45" Color="Black"/>
+        </Border.Effect>
+
+        <StackPanel Orientation="Horizontal">
+            <Button Content="복사" Style="{StaticResource PaletteActionButton}"
+                    Click="OnCopyClicked"/>
+            <Button Content="번역" Style="{StaticResource PaletteActionButton}"
+                    Click="OnTranslateClicked"/>
+            <Button Content="사전" Style="{StaticResource PaletteActionButton}"
+                    Click="OnDictionaryClicked"/>
+            <Button Content="검색" Style="{StaticResource PaletteActionButton}"
+                    Click="OnSearchClicked"/>
+        </StackPanel>
+    </Border>
+</Window>

@@ -1,0 +1,25 @@
+## .NET
+bin/
+obj/
+publish/
+*.user
+*.suo
+*.userprefs
+*.dll
+*.exe
+!**/Assets/*.exe
+*.pdb
+
+## IDE
+.vs/
+.vscode/
+.idea/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Build artifacts
+artifacts/
+TestResults/
+*.log
