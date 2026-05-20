@@ -8,6 +8,8 @@ using System.Windows.Media;
 using SweetyWin.Native;
 using SweetyWin.Services;
 using SweetyWin.Translation;
+// FrameworkElement.Language(XmlLanguage) 가 우리 enum 을 가리는 문제 회피 — 별칭 사용
+using TLang = SweetyWin.Translation.Language;
 
 namespace SweetyWin.Views;
 
@@ -174,7 +176,7 @@ public partial class QuickPopWindow : Window
 
         try
         {
-            var result = await _translation.TranslateAsync(SelectedText, Language.Auto, Language.Auto, token)
+            var result = await _translation.TranslateAsync(SelectedText, TLang.Auto, TLang.Auto, token)
                 .ConfigureAwait(true);
             if (token.IsCancellationRequested) return;
 
@@ -254,16 +256,16 @@ public partial class QuickPopWindow : Window
         }
     }
 
-    private static string LanguageLabel(Language lang) => lang switch
+    private static string LanguageLabel(TLang lang) => lang switch
     {
-        Language.Korean => "한국어",
-        Language.English => "영어",
-        Language.Japanese => "일본어",
-        Language.Chinese => "중국어",
-        Language.Spanish => "스페인어",
-        Language.French => "프랑스어",
-        Language.German => "독일어",
-        Language.Russian => "러시아어",
+        TLang.Korean => "한국어",
+        TLang.English => "영어",
+        TLang.Japanese => "일본어",
+        TLang.Chinese => "중국어",
+        TLang.Spanish => "스페인어",
+        TLang.French => "프랑스어",
+        TLang.German => "독일어",
+        TLang.Russian => "러시아어",
         _ => "자동",
     };
 }
