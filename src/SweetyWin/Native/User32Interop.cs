@@ -7,8 +7,9 @@ namespace SweetyWin.Native;
 /// <summary>
 /// User32 P/Invoke 모음 — 글로벌 핫키, 윈도우 스타일, 커서 위치, 활성 윈도우 조회.
 /// macOS Sweety 의 CGEventTap / NSPanel.nonactivating / NSEvent.mouseLocation 대응.
+/// public 이유: POINT 구조체가 public MouseHookService 생성자 매개변수에 노출됨.
 /// </summary>
-internal static class User32Interop
+public static class User32Interop
 {
     // ── 글로벌 핫키 ──────────────────────────────────────────────
     public const int WM_HOTKEY = 0x0312;
