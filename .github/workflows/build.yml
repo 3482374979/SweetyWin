@@ -8,6 +8,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Release 생성 + 노트 자동 생성 권한 필요 — 기본 GITHUB_TOKEN 의 read 권한으로는 부족
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
