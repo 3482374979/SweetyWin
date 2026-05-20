@@ -9,31 +9,117 @@
         Background="Transparent"
         SizeToContent="WidthAndHeight"
         ResizeMode="NoResize"
-        Focusable="False"
-        ShowActivated="False"
+        ShowActivated="True"
         Visibility="Hidden">
 
-    <!-- 패널 본체 — 둥근 모서리 + 반투명 배경. WPF Acrylic 효과는 SourceInitialized 에서 별도 적용 가능. -->
     <Border CornerRadius="14"
             Background="{StaticResource PaletteBackground}"
             BorderBrush="{StaticResource PaletteBorder}"
             BorderThickness="1"
-            Padding="8,6"
+            Padding="10,8"
             SnapsToDevicePixels="True"
-            UseLayoutRounding="True">
+            UseLayoutRounding="True"
+            MinWidth="240"
+            MaxWidth="520">
         <Border.Effect>
             <DropShadowEffect BlurRadius="18" ShadowDepth="4" Opacity="0.45" Color="Black"/>
         </Border.Effect>
 
-        <StackPanel Orientation="Horizontal">
-            <Button Content="복사" Style="{StaticResource PaletteActionButton}"
-                    Click="OnCopyClicked"/>
-            <Button Content="번역" Style="{StaticResource PaletteActionButton}"
-                    Click="OnTranslateClicked"/>
-            <Button Content="사전" Style="{StaticResource PaletteActionButton}"
-                    Click="OnDictionaryClicked"/>
-            <Button Content="검색" Style="{StaticResource PaletteActionButton}"
-                    Click="OnSearchClicked"/>
+        <StackPanel>
+            <!-- 액션 행 — 항상 표시 -->
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="CopyBtn" Content="복사" Style="{StaticResource PaletteActionButton}"
+                        Click="OnCopyClicked"/>
+                <Button x:Name="TranslateBtn" Content="번역" Style="{StaticResource PaletteActionButton}"
+                        Click="OnTranslateClicked"/>
+                <Button x:Name="DictionaryBtn" Content="사전" Style="{StaticResource PaletteActionButton}"
+                        Click="OnDictionaryClicked"/>
+                <Button x:Name="SearchBtn" Content="검색" Style="{StaticResource PaletteActionButton}"
+                        Click="OnSearchClicked"/>
+            </StackPanel>
+
+            <!-- 번역 결과 패널 — IsVisible 토글 -->
+            <Border x:Name="TranslationPanel"
+                    Visibility="Collapsed"
+                    Margin="0,8,0,0"
+                    Padding="10,8"
+                    CornerRadius="10"
+                    Background="#11FFFFFF"
+                    BorderBrush="#22FFFFFF"
+                    BorderThickness="1">
+                <StackPanel>
+                    <!-- 헤더: 원본 → 번역 방향 + 닫기 -->
+                    <Grid Margin="0,0,0,6">
+                        <TextBlock x:Name="TranslationHeader"
+                                   Text="번역"
+                                   FontSize="10"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource PaletteTertiary}"
+                                   HorizontalAlignment="Left"
+                                   VerticalAlignment="Center"/>
+                        <Button x:Name="CloseTranslateBtn"
+                                Content="✕"
+                                Style="{StaticResource PaletteActionButton}"
+                                Padding="6,2"
+                                FontSize="10"
+                                HorizontalAlignment="Right"
+                                Click="OnCloseTranslationClicked"/>
+                    </Grid>
+
+                    <!-- 원본 텍스트 -->
+                    <TextBlock x:Name="SourceTextBlock"
+                               Text=""
+                               TextWrapping="Wrap"
+                               Foreground="{StaticResource PaletteSecondary}"
+                               FontSize="12"
+                               MaxHeight="80"
+                               Margin="0,0,0,6"/>
+
+                    <!-- 구분선 -->
+                    <Border Height="1" Background="#22FFFFFF" Margin="0,4"/>
+
+                    <!-- 번역 결과 영역 — 로딩 / 결과 토글 -->
+                    <Grid>
+                        <StackPanel x:Name="LoadingIndicator"
+                                    Orientation="Horizontal"
+                                    Visibility="Collapsed">
+                            <ProgressBar IsIndeterminate="True"
+                                         Width="60" Height="2"
+                                         Foreground="{StaticResource PaletteAccent}"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         VerticalAlignment="Center"/>
+                            <TextBlock Text="번역 중…"
+                                       FontSize="11"
+                                       Foreground="{StaticResource PaletteTertiary}"
+                                       Margin="8,0,0,0"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <TextBlock x:Name="TranslatedTextBlock"
+                                   Text=""
+                                   TextWrapping="Wrap"
+                                   Foreground="{StaticResource PalettePrimary}"
+                                   FontSize="13"
+                                   MaxHeight="160"/>
+                    </Grid>
+
+                    <!-- 결과 액션 — 복사 + provider 표시 -->
+                    <Grid Margin="0,8,0,0">
+                        <TextBlock x:Name="ProviderLabel"
+                                   FontSize="9"
+                                   Foreground="{StaticResource PaletteTertiary}"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Left"/>
+                        <Button x:Name="CopyTranslationBtn"
+                                Content="결과 복사"
+                                Style="{StaticResource PaletteActionButton}"
+                                FontSize="11"
+                                Padding="8,4"
+                                HorizontalAlignment="Right"
+                                Click="OnCopyTranslationClicked"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </StackPanel>
     </Border>
 </Window>

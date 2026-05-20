@@ -11,24 +11,37 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 - UI Automation (planned, Phase 2) — selection text detection
 - Translation APIs (planned, Phase 3) — DeepL Free / Naver Papago
 
-## Status (Phase 1)
+## Status
 
-- [x] Project scaffold (.sln, .csproj, app.manifest, single-file publish)
-- [x] App.xaml + single instance mutex
-- [x] HotkeyService — `Ctrl+Shift+Space` toggles QuickPop near cursor
-- [x] QuickPopWindow — nonactivating, topmost, rounded acrylic-ish, cursor-relative position with screen clamp
-- [x] Placeholder action buttons (copy / translate / dictionary / search)
-- [x] GitHub Actions build → `SweetyWin.exe` single-file artifact
+- [x] **Phase 1** — Project scaffold, single-instance, global hotkey, popup window
+- [x] **Phase 2** — SelectionService (UI Automation + Ctrl+C clipboard fallback)
+- [x] **Phase 3** — Translation pipeline (MyMemory default + DeepL when API key set), inline result panel with auto language detection
+- [ ] **Phase 4** — Settings UI + system tray + auto-start
+- [ ] **Phase 5** — Clipboard history (optional)
 
-## Roadmap
+## How it works
 
-| Phase | Focus | Status |
-|-------|-------|--------|
-| **1** | Scaffold + hotkey + popup window | ✅ |
-| **2** | Text selection detection (UIA + clipboard fallback) | ⏳ |
-| **3** | Translation (DeepL Free / Papago) — primary feature | ⏳ |
-| **4** | Settings UI + system tray + auto-start | ⏳ |
-| **5** | Clipboard history (optional) | ⏳ |
+1. Press `Ctrl+Shift+Space` after selecting text in any app
+2. SelectionService captures the selection via UIA (no clipboard pollution); falls back to Ctrl+C + clipboard read/restore for non-UIA apps
+3. QuickPop appears near cursor with action buttons
+4. Click **번역** → result panel expands inline; auto-detects source language (Hangul/Kana/Han/Latin/Cyrillic heuristic) and infers target (Korean → English, else → Korean)
+5. Translation routes through providers in priority order:
+   - **DeepL Free** (if `DeepLApiKey` set in settings.json)
+   - **MyMemory** (default, no API key needed, ~1000 words/day)
+
+## Settings
+
+`%LOCALAPPDATA%\SweetyWin\settings.json` (created on first run):
+
+```json
+{
+  "DeepLApiKey": "your-key:fx",
+  "HotkeyVk": 32,
+  "HotkeyModifiers": 6
+}
+```
+
+`HotkeyModifiers`: `2`=Ctrl, `4`=Shift, `1`=Alt, `8`=Win (combinable). `HotkeyVk` is the Win32 VK code (space = `0x20`).
 
 ## Build
 

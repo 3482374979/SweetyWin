@@ -29,6 +29,12 @@
     <PackageReference Include="System.Text.Json" Version="8.0.5" />
   </ItemGroup>
 
+  <!-- UI Automation — 시스템 전반 텍스트 선택 캡처용 (SelectionService) -->
+  <ItemGroup>
+    <Reference Include="UIAutomationClient" />
+    <Reference Include="UIAutomationTypes" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="app.manifest">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

@@ -1,15 +1,17 @@
 using System;
+using System.Net.Http;
 using System.Threading;
 using System.Windows;
 using SweetyWin.Native;
 using SweetyWin.Services;
+using SweetyWin.Translation;
 using SweetyWin.Views;
 
 namespace SweetyWin;
 
 /// <summary>
-/// 애플리케이션 진입점. 단일 인스턴스 보장 + 호스트 윈도우 + 글로벌 핫키 + 트레이.
-/// macOS Sweety 의 AppDelegate + TextActionService.show 의 진입 흐름에 대응.
+/// 애플리케이션 진입점. 단일 인스턴스 + 서비스 와이어업 + 글로벌 핫키 + 호스트 윈도우.
+/// macOS Sweety 의 AppDelegate + TextActionService.show 진입 흐름에 대응.
 /// </summary>
 public partial class App : Application
 {
@@ -17,15 +19,18 @@ public partial class App : Application
     private Mutex? _singleInstanceMutex;
     private bool _ownsSingleInstanceMutex;
 
+    private SettingsService? _settings;
+    private SelectionService? _selection;
+    private TranslationService? _translation;
     private HotkeyService? _hotkeyService;
+    private HttpClient? _http;
     private QuickPopWindow? _quickPop;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
 
-        // 단일 인스턴스 — 두 번째 실행은 즉시 종료.
-        // initiallyOwned=false → CreatedNew==true 인 인스턴스만 소유권 획득.
+        // ── 단일 인스턴스 ────────────────────────────────────────
         _singleInstanceMutex = new Mutex(initiallyOwned: false, name: SingleInstanceMutexName, createdNew: out var created);
         if (!created)
         {
@@ -36,28 +41,36 @@ public partial class App : Application
             Shutdown();
             return;
         }
-        // 소유권 획득 — Exit 시 release
         try
         {
             _ownsSingleInstanceMutex = _singleInstanceMutex.WaitOne(0);
         }
         catch (AbandonedMutexException)
         {
-            // 이전 인스턴스가 비정상 종료 — 우리가 소유권 가져옴
             _ownsSingleInstanceMutex = true;
         }
 
-        // QuickPop 호스트 윈도우 — 숨겨진 상태로 유지, 핫키/선택 감지 시 표시
-        _quickPop = new QuickPopWindow();
-        // 핫키: Ctrl+Shift+Space → QuickPop 토글 (Phase 2 에서 텍스트 선택 트리거로 교체 예정)
+        // ── 서비스 와이어업 ──────────────────────────────────────
+        _settings = new SettingsService();
+        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        _selection = new SelectionService();
+        _translation = new TranslationService(_settings, _http);
+
+        // ── 호스트 윈도우 (숨김 상태로 유지, 핫키 시 표시) ──────
+        _quickPop = new QuickPopWindow(_selection, _translation);
+
+        // ── 글로벌 핫키 ──────────────────────────────────────────
         _hotkeyService = new HotkeyService();
+        var s = _settings.Current;
         var id = _hotkeyService.Register(
-            HotkeyModifiers.Control | HotkeyModifiers.Shift,
-            VirtualKey.Space,
-            () => _quickPop.ToggleNearCursor());
+            (HotkeyModifiers)s.HotkeyModifiers,
+            (VirtualKey)s.HotkeyVk,
+            () => _quickPop?.ToggleNearCursor());
         if (id < 0)
         {
-            MessageBox.Show("Failed to register hotkey Ctrl+Shift+Space — another app may be using it.",
+            MessageBox.Show(
+                "Failed to register global hotkey — another app may be using it.\n" +
+                "Default: Ctrl+Shift+Space",
                 "SweetyWin", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
@@ -66,10 +79,11 @@ public partial class App : Application
     {
         _hotkeyService?.Dispose();
         _quickPop?.Close();
+        _http?.Dispose();
         if (_ownsSingleInstanceMutex)
         {
             try { _singleInstanceMutex?.ReleaseMutex(); }
-            catch (ApplicationException) { /* not owner — ignore */ }
+            catch (ApplicationException) { /* not owner */ }
         }
         _singleInstanceMutex?.Dispose();
         base.OnExit(e);
