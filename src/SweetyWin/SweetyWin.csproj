@@ -37,6 +37,13 @@
     <Reference Include="UIAutomationTypes" />
   </ItemGroup>
 
+  <!-- WinForms global using 제거 — WPF 의 Application/MessageBox/KeyEventArgs 와 충돌 방지.
+       TrayIconService 만 explicit `using System.Windows.Forms;` 로 NotifyIcon 사용. -->
+  <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Update="app.manifest">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
