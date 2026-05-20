@@ -15,6 +15,7 @@ public partial class App : Application
 {
     private const string SingleInstanceMutexName = "Local\\SweetyWin.SingleInstance";
     private Mutex? _singleInstanceMutex;
+    private bool _ownsSingleInstanceMutex;
 
     private HotkeyService? _hotkeyService;
     private QuickPopWindow? _quickPop;
@@ -23,14 +24,27 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
-        // 단일 인스턴스 — 두 번째 실행은 즉시 종료
-        _singleInstanceMutex = new Mutex(initiallyOwned: true, name: SingleInstanceMutexName, createdNew: out var created);
+        // 단일 인스턴스 — 두 번째 실행은 즉시 종료.
+        // initiallyOwned=false → CreatedNew==true 인 인스턴스만 소유권 획득.
+        _singleInstanceMutex = new Mutex(initiallyOwned: false, name: SingleInstanceMutexName, createdNew: out var created);
         if (!created)
         {
             MessageBox.Show("SweetyWin is already running.", "SweetyWin",
                 MessageBoxButton.OK, MessageBoxImage.Information);
+            _singleInstanceMutex.Dispose();
+            _singleInstanceMutex = null;
             Shutdown();
             return;
+        }
+        // 소유권 획득 — Exit 시 release
+        try
+        {
+            _ownsSingleInstanceMutex = _singleInstanceMutex.WaitOne(0);
+        }
+        catch (AbandonedMutexException)
+        {
+            // 이전 인스턴스가 비정상 종료 — 우리가 소유권 가져옴
+            _ownsSingleInstanceMutex = true;
         }
 
         // QuickPop 호스트 윈도우 — 숨겨진 상태로 유지, 핫키/선택 감지 시 표시
@@ -52,7 +66,11 @@ public partial class App : Application
     {
         _hotkeyService?.Dispose();
         _quickPop?.Close();
-        _singleInstanceMutex?.ReleaseMutex();
+        if (_ownsSingleInstanceMutex)
+        {
+            try { _singleInstanceMutex?.ReleaseMutex(); }
+            catch (ApplicationException) { /* not owner — ignore */ }
+        }
         _singleInstanceMutex?.Dispose();
         base.OnExit(e);
     }
