@@ -23,6 +23,7 @@ public partial class SettingsWindow : Window
         DeepLKeyBox.Password = s.DeepLApiKey ?? string.Empty;
         AutoStartCheck.IsChecked = AutoStartService.IsEnabled;
         AutoShowOnDragCheck.IsChecked = s.AutoShowOnDragSelect;
+        DiagnosticLogCheck.IsChecked = s.EnableDiagnosticLog;
         HotkeyDisplay.Text = FormatHotkey(s.HotkeyModifiers, s.HotkeyVk);
     }
 
@@ -85,6 +86,10 @@ public partial class SettingsWindow : Window
 
         // 드래그-자동 표시 — 변경은 다음 앱 시작부터 반영 (mouse hook 재설치 필요)
         s.AutoShowOnDragSelect = AutoShowOnDragCheck.IsChecked == true;
+
+        // (v0.1.4) 진단 로그 — 즉시 반영
+        s.EnableDiagnosticLog = DiagnosticLogCheck.IsChecked == true;
+        LogService.EnableDiagnostic = s.EnableDiagnosticLog;
 
         _settings.Save();
 

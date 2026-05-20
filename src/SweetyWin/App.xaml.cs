@@ -32,6 +32,11 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        // (v0.1.4) 진단 로그 활성화 여부 먼저 파악 — settings 가 가장 먼저 로드 필요.
+        // settings init 은 LogService.Init 보다 먼저 — Init 자체 메시지는 항상 기록되지만
+        // 이후 LogInfo 들이 EnableDiagnostic 토글 따름.
+        var tempSettings = new SettingsService();
+        LogService.EnableDiagnostic = tempSettings.Current.EnableDiagnosticLog;
         LogService.Init();
 
         // ── 단일 인스턴스 ────────────────────────────────────────
@@ -55,7 +60,7 @@ public partial class App : Application
         }
 
         // ── 서비스 와이어업 ──────────────────────────────────────
-        _settings = new SettingsService();
+        _settings = tempSettings;  // (v0.1.4) 위에서 이미 로드한 인스턴스 재사용
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         _selection = new SelectionService();
         _translation = new TranslationService(_settings, _http);
@@ -97,7 +102,7 @@ public partial class App : Application
             return;
         }
 
-        LogService.Log("App: click outside popup → hide");
+        LogService.LogInfo("App: click outside popup → hide");
         _quickPop.Hide();
     }
 
@@ -106,12 +111,12 @@ public partial class App : Application
     {
         if (_quickPop == null || _selection == null || _settings == null)
         {
-            LogService.Log("Drag-show: services not ready");
+            LogService.LogInfo("Drag-show: services not ready");
             return;
         }
         if (_quickPop.IsVisible)
         {
-            LogService.Log("Drag-show: popup already visible — ignored");
+            LogService.LogInfo("Drag-show: popup already visible — ignored");
             return;
         }
 
@@ -121,16 +126,16 @@ public partial class App : Application
             var text = await _selection.CaptureAsync(cts.Token).ConfigureAwait(true);
             if (string.IsNullOrWhiteSpace(text))
             {
-                LogService.Log("Drag-show: capture empty — no popup");
+                LogService.LogInfo("Drag-show: capture empty — no popup");
                 return;
             }
             if (text.Length < _settings.Current.MinAutoShowTextLength)
             {
-                LogService.Log($"Drag-show: text too short ({text.Length} < {_settings.Current.MinAutoShowTextLength})");
+                LogService.LogInfo($"Drag-show: text too short ({text.Length} < {_settings.Current.MinAutoShowTextLength})");
                 return;
             }
 
-            LogService.Log($"Drag-show: showing popup with {text.Length} chars");
+            LogService.LogInfo($"Drag-show: showing popup with {text.Length} chars");
             _quickPop.ShowWithText(text);
             // v0.1.3: 600ms (이전 500ms) — 더블클릭 임계값(500ms) 이상 확보
             _mouseHook?.Suppress(TimeSpan.FromMilliseconds(600));
@@ -161,7 +166,7 @@ public partial class App : Application
         }
         else
         {
-            LogService.Log($"Hotkey registered id={id} mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X}");
+            LogService.LogInfo($"Hotkey registered id={id} mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X}");
         }
     }
 

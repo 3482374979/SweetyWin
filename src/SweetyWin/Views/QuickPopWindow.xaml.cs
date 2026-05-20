@@ -72,17 +72,17 @@ public partial class QuickPopWindow : Window
     // ── 표시/숨김 ─────────────────────────────────────────────────
     public async Task ShowNearCursorAsync()
     {
-        LogService.Log("ShowNearCursorAsync: hotkey trigger → capturing...");
+        LogService.LogInfo("ShowNearCursorAsync: hotkey trigger → capturing...");
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
             SelectedText = await _selection.CaptureAsync(cts.Token).ConfigureAwait(true);
-            LogService.Log($"ShowNearCursorAsync: captured {SelectedText.Length} chars");
+            LogService.LogInfo($"ShowNearCursorAsync: captured {SelectedText.Length} chars");
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Selection capture failed: {ex.Message}");
-            LogService.Log($"ShowNearCursorAsync: capture exception {ex.Message}");
+            LogService.LogInfo($"ShowNearCursorAsync: capture exception {ex.Message}");
             SelectedText = string.Empty;
         }
 
@@ -208,7 +208,7 @@ public partial class QuickPopWindow : Window
         _translateCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var token = _translateCts.Token;
 
-        LogService.Log($"Translate: requesting {SelectedText.Length} chars");
+        LogService.LogInfo($"Translate: requesting {SelectedText.Length} chars");
         try
         {
             var result = await _translation.TranslateAsync(SelectedText, TLang.Auto, TLang.Auto, token)
@@ -218,11 +218,11 @@ public partial class QuickPopWindow : Window
             TranslatedTextBlock.Text = string.IsNullOrEmpty(result.Text) ? "(번역 결과 없음)" : result.Text;
             TranslationHeader.Text = $"{LanguageLabel(result.DetectedSource)} → {LanguageLabel(result.Target)}";
             ProviderLabel.Text = result.ProviderName;
-            LogService.Log($"Translate: success via {result.ProviderName}, {result.Text.Length} chars");
+            LogService.LogInfo($"Translate: success via {result.ProviderName}, {result.Text.Length} chars");
         }
         catch (OperationCanceledException)
         {
-            LogService.Log("Translate: cancelled");
+            LogService.LogInfo("Translate: cancelled");
         }
         catch (Exception ex)
         {

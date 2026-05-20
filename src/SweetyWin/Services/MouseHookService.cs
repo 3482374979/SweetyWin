@@ -52,7 +52,7 @@ public sealed class MouseHookService : IDisposable
         }
         else
         {
-            LogService.Log($"MouseHook: installed (handle=0x{_hook.ToInt64():X})");
+            LogService.LogInfo($"MouseHook: installed (handle=0x{_hook.ToInt64():X})");
         }
     }
 
@@ -113,7 +113,10 @@ public sealed class MouseHookService : IDisposable
                 if (DateTime.UtcNow >= _suppressUntil && (isDrag || isDoubleClick))
                 {
                     var trigger = isDrag ? "drag" : "doubleclick";
-                    LogService.Log($"MouseHook: trigger ({trigger}) dx={dx} dy={dy}");
+                    LogService.LogInfo($"MouseHook: trigger ({trigger}) dx={dx} dy={dy}");
+                    // v0.1.4: 트리플클릭 가드 — 발화 후 더블클릭 카운터 reset
+                    // 안 하면 3rd down 도 prev 와 비교되어 또 doubleClick 으로 인식 → 중복 트리거
+                    _lastDownTime = DateTime.MinValue;
                     _dispatcher.BeginInvoke(new Action(() =>
                     {
                         try { _onSelectionTrigger(up); }

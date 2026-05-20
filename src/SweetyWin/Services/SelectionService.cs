@@ -27,14 +27,14 @@ public sealed class SelectionService
         var uia = await TryUiaAsync(UiaTimeout, ct).ConfigureAwait(false);
         if (!string.IsNullOrEmpty(uia))
         {
-            LogService.Log($"Capture: UIA succeeded ({uia.Length} chars)");
+            LogService.LogInfo($"Capture: UIA succeeded ({uia.Length} chars)");
             return uia;
         }
-        LogService.Log("Capture: UIA empty/failed → Ctrl+C fallback");
+        LogService.LogInfo("Capture: UIA empty/failed → Ctrl+C fallback");
 
         // 2) Ctrl+C fallback
         var clip = await TryClipboardFallbackAsync(ClipboardTimeout, ct).ConfigureAwait(false);
-        LogService.Log($"Capture: Ctrl+C result ({clip.Length} chars)");
+        LogService.LogInfo($"Capture: Ctrl+C result ({clip.Length} chars)");
         return clip;
     }
 
@@ -54,7 +54,7 @@ public sealed class SelectionService
                     var focused = AutomationElement.FocusedElement;
                     if (focused == null)
                     {
-                        LogService.Log("UIA: FocusedElement=null");
+                        LogService.LogInfo("UIA: FocusedElement=null");
                         return string.Empty;
                     }
 
@@ -62,12 +62,12 @@ public sealed class SelectionService
                     var t1 = TryTextPatternAncestor(focused);
                     if (!string.IsNullOrEmpty(t1)) return t1;
 
-                    LogService.Log($"UIA: no TextPattern in ancestors of {focused.Current.ControlType?.ProgrammaticName}");
+                    LogService.LogInfo($"UIA: no TextPattern in ancestors of {focused.Current.ControlType?.ProgrammaticName}");
                     return string.Empty;
                 }
                 catch (Exception ex)
                 {
-                    LogService.Log($"UIA exception: {ex.GetType().Name} {ex.Message}");
+                    LogService.LogInfo($"UIA exception: {ex.GetType().Name} {ex.Message}");
                     return string.Empty;
                 }
             }, cts.Token);
@@ -76,7 +76,7 @@ public sealed class SelectionService
             var done = await Task.WhenAny(work, timeoutTask).ConfigureAwait(false);
             if (done == timeoutTask)
             {
-                LogService.Log("UIA: timed out");
+                LogService.LogInfo("UIA: timed out");
                 return string.Empty;
             }
             return await work.ConfigureAwait(false);
@@ -103,7 +103,7 @@ public sealed class SelectionService
                         var text = ranges[0].GetText(-1)?.Trim();
                         if (!string.IsNullOrEmpty(text))
                         {
-                            LogService.Log($"UIA: TextPattern hit at depth {i}");
+                            LogService.LogInfo($"UIA: TextPattern hit at depth {i}");
                             return text;
                         }
                     }
@@ -123,7 +123,7 @@ public sealed class SelectionService
         var dispatcher = Application.Current?.Dispatcher;
         if (dispatcher == null)
         {
-            LogService.Log("Ctrl+C: no dispatcher");
+            LogService.LogInfo("Ctrl+C: no dispatcher");
             return string.Empty;
         }
 
@@ -153,12 +153,12 @@ public sealed class SelectionService
                                     var t = Clipboard.GetText();
                                     return string.IsNullOrEmpty(t) ? string.Empty : t.Trim();
                                 }
-                                LogService.Log("Ctrl+C: clipboard changed but ContainsText=false");
+                                LogService.LogInfo("Ctrl+C: clipboard changed but ContainsText=false");
                                 return string.Empty;
                             }
                             catch (Exception ex)
                             {
-                                LogService.Log($"Ctrl+C: read attempt {attempt + 1} failed: {ex.Message}");
+                                LogService.LogInfo($"Ctrl+C: read attempt {attempt + 1} failed: {ex.Message}");
                                 await Task.Delay(20, ct).ConfigureAwait(true);
                             }
                         }
@@ -166,7 +166,7 @@ public sealed class SelectionService
                     }
                     await Task.Delay(8, ct).ConfigureAwait(true);
                 }
-                LogService.Log("Ctrl+C: timed out — clipboard sequence didn't change");
+                LogService.LogInfo("Ctrl+C: timed out — clipboard sequence didn't change");
                 return string.Empty;
             }
             catch (OperationCanceledException)

@@ -13,8 +13,15 @@ public static class LogService
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "SweetyWin", "sweetywin.log");
 
+    /// <summary>
+    /// 정보성 로그(드래그·캡처·번역 매 호출 등) 활성화 여부.
+    /// v0.1.4: 기본 OFF — 사용자가 진단 필요 시 설정에서 켬.
+    /// 에러/실패는 항상 기록 (Log 메서드).
+    /// </summary>
+    public static bool EnableDiagnostic { get; set; }
+
     private static readonly object Sync = new();
-    private const long MaxBytes = 1_000_000; // 1MB — 시작 시 초과면 회전
+    private const long MaxBytes = 1_000_000;
 
     public static void Init()
     {
@@ -27,16 +34,15 @@ public static class LogService
                 var info = new FileInfo(LogPath);
                 if (info.Length > MaxBytes) File.Delete(LogPath);
             }
+            // Init 메시지는 항상 기록 (간헐적 — 시작 시 1회)
             Log("=== SweetyWin started ===");
             Log($"Version: {typeof(LogService).Assembly.GetName().Version}");
-            Log($"OS: {Environment.OSVersion}, 64bit: {Environment.Is64BitOperatingSystem}");
+            Log($"OS: {Environment.OSVersion}, 64bit: {Environment.Is64BitOperatingSystem}, Diagnostic: {EnableDiagnostic}");
         }
-        catch
-        {
-            // 로그 자체가 실패하면 무시
-        }
+        catch { /* 로그 실패는 무시 */ }
     }
 
+    /// <summary>항상 기록 — 에러·실패·시작/종료 등 드물고 중요한 이벤트.</summary>
     public static void Log(string msg)
     {
         try
@@ -46,9 +52,13 @@ public static class LogService
                 File.AppendAllText(LogPath, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
             }
         }
-        catch
-        {
-            // 로그 자체가 실패하면 무시 (디스크 풀 / 권한 등)
-        }
+        catch { /* 디스크 풀/권한 등 무시 */ }
+    }
+
+    /// <summary>EnableDiagnostic=true 일 때만 기록 — 매 클릭/캡처/번역 등 빈번한 이벤트.</summary>
+    public static void LogInfo(string msg)
+    {
+        if (!EnableDiagnostic) return;
+        Log(msg);
     }
 }

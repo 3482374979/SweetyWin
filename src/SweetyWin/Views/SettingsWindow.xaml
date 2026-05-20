@@ -72,9 +72,10 @@
             <TextBlock Text="HKCU\Run 레지스트리 — 관리자 권한 불필요."
                        FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,16" TextWrapping="Wrap"/>
 
-            <!-- ── 진단 (v0.1.2) ────────────────────────────────────── -->
+            <!-- ── 진단 (v0.1.4) ────────────────────────────────────── -->
             <TextBlock Text="진단" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,12"/>
-            <TextBlock Text="동작 안 함 신고 시 아래 로그를 공유해주세요. 캡처/핫키/마우스 후킹 결과가 기록됩니다."
+            <CheckBox x:Name="DiagnosticLogCheck" Content="진단 로그 활성화 (성능에 영향)"/>
+            <TextBlock Text="기본 OFF. 동작 안 함 신고 시에만 켜고, 재현 후 로그 공유. 에러는 항상 기록."
                        FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,6" TextWrapping="Wrap"/>
             <Button x:Name="OpenLogBtn" Content="로그 파일 열기"
                     HorizontalAlignment="Left" Margin="0,0,0,16"

@@ -20,6 +20,9 @@ public sealed class SweetyWinSettings
 
     /// <summary>드래그-자동 표시 시 선택 텍스트 최소 길이 (단일 클릭 노이즈 필터).</summary>
     public int MinAutoShowTextLength { get; set; } = 2;
+
+    /// <summary>(v0.1.4) 정보성 진단 로그 활성화 — 기본 OFF.</summary>
+    public bool EnableDiagnosticLog { get; set; } = false;
 }
 
 /// <summary>
@@ -39,6 +42,9 @@ public sealed class SettingsService
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
+    // v0.1.4: 파일 IO 동시성 보호 — Load/Save 동시 호출 race 방지
+    private readonly object _fileSync = new();
+
     public SweetyWinSettings Current { get; private set; } = new();
 
     public SettingsService()
@@ -48,25 +54,32 @@ public sealed class SettingsService
 
     public void Load()
     {
-        try
+        lock (_fileSync)
         {
-            if (!File.Exists(SettingsPath))
+            try
             {
-                Save(); // 빈 기본 설정 생성
-                return;
+                if (!File.Exists(SettingsPath))
+                {
+                    SaveUnlocked(); // 빈 기본 설정 생성
+                    return;
+                }
+                var json = File.ReadAllText(SettingsPath);
+                var loaded = JsonSerializer.Deserialize<SweetyWinSettings>(json, JsonOpts);
+                if (loaded != null) Current = loaded;
             }
-            var json = File.ReadAllText(SettingsPath);
-            var loaded = JsonSerializer.Deserialize<SweetyWinSettings>(json, JsonOpts);
-            if (loaded != null) Current = loaded;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Settings load failed: {ex.Message}");
-            // 손상된 설정 — 기본값으로 진행
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Settings load failed: {ex.Message}");
+            }
         }
     }
 
     public void Save()
+    {
+        lock (_fileSync) { SaveUnlocked(); }
+    }
+
+    private void SaveUnlocked()
     {
         try
         {
