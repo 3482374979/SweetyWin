@@ -97,6 +97,10 @@ public static class User32Interop
     [DllImport("user32.dll")]
     public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
+    /// <summary>윈도우의 화면 좌표 rect — 클릭아웃 감지에 사용 (v0.1.3).</summary>
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
     // ── SendInput (Ctrl+C clipboard fallback) ──────────────────
     [StructLayout(LayoutKind.Sequential)]
     public struct INPUT

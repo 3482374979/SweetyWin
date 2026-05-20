@@ -21,7 +21,7 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 
 ## How it works
 
-**자동 트리거 (v0.1.1+)**: 텍스트를 드래그-선택하고 마우스 떼면 자동으로 팝업이 떠오릅니다. 설정에서 끌 수 있습니다.
+**자동 트리거 (v0.1.3+)**: 텍스트를 **드래그-선택** 하거나 **더블클릭** 으로 단어 선택 후 마우스 떼면 자동으로 팝업이 떠오릅니다. 팝업 밖을 클릭하면 자동으로 닫힙니다.
 
 **수동 트리거**: `Ctrl+Shift+Space` 누르면 현재 선택 텍스트로 팝업.
 
@@ -66,9 +66,14 @@ Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\setti
 
 ## 호환성 노트
 
-- **UIA 미지원 앱**(일부 게임·구식 win32 앱·일부 한국 소프트웨어) → Ctrl+C fallback 시도
+캡처 경로 (v0.1.3 기준, 순차 시도):
+1. **UIA TextPattern** — focused element 자신부터 ancestor 5단계까지 탐색
+2. **UIA LegacyIAccessiblePattern** (MSAA fallback) — win32 legacy 앱용
+3. **Ctrl+C → 클립보드** — 위 둘 실패 시 (1000ms 타임아웃)
+
 - **관리자 권한으로 실행되는 앱** → 일반 권한 SweetyWin 이 마우스/키 후킹 못 함 (UIPI). SweetyWin 도 관리자 권한 실행 필요.
-- **Electron 앱(Slack/Discord/VSCode)** → 보통 잘 동작
+- **Electron 앱(Slack/Discord/VSCode)** → UIA 잘 동작
+- **한컴오피스 한글/카카오톡** → Ctrl+C fallback 또는 LegacyPattern
 
 ## Build
 

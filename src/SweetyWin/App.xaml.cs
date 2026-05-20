@@ -73,15 +73,36 @@ public partial class App : Application
         _hotkeyService = new HotkeyService();
         RegisterHotkeyFromSettings();
 
-        // ── 드래그-선택 자동 표시 (v0.1.1) ────────────────────────
+        // ── 드래그/더블클릭 자동 표시 + 클릭아웃 hide (v0.1.3) ──
         if (_settings.Current.AutoShowOnDragSelect)
         {
-            _mouseHook = new MouseHookService(_ => HandleDragSelectComplete());
+            _mouseHook = new MouseHookService(
+                onSelectionTrigger: _ => HandleSelectionTrigger(),
+                onLeftClickAnywhere: pt => HandleClickOutside(pt));
         }
     }
 
-    /// <summary>드래그 종료 시 호출 — 캡처 후 텍스트 있으면 팝업 표시.</summary>
-    private async void HandleDragSelectComplete()
+    /// <summary>(v0.1.3) popup 보이는 동안 popup 밖 클릭 감지 → hide.</summary>
+    private void HandleClickOutside(User32Interop.POINT pt)
+    {
+        if (_quickPop == null || !_quickPop.IsVisible) return;
+
+        var hwnd = User32Interop.GetWindowHandle(_quickPop);
+        if (hwnd == IntPtr.Zero) return;
+
+        if (!User32Interop.GetWindowRect(hwnd, out var r)) return;
+        if (pt.X >= r.Left && pt.X <= r.Right && pt.Y >= r.Top && pt.Y <= r.Bottom)
+        {
+            // popup 안 — 버튼 클릭 등, 무시
+            return;
+        }
+
+        LogService.Log("App: click outside popup → hide");
+        _quickPop.Hide();
+    }
+
+    /// <summary>드래그/더블클릭 종료 시 호출 — 캡처 후 텍스트 있으면 팝업 표시.</summary>
+    private async void HandleSelectionTrigger()
     {
         if (_quickPop == null || _selection == null || _settings == null)
         {
@@ -111,7 +132,8 @@ public partial class App : Application
 
             LogService.Log($"Drag-show: showing popup with {text.Length} chars");
             _quickPop.ShowWithText(text);
-            _mouseHook?.Suppress(TimeSpan.FromMilliseconds(500));
+            // v0.1.3: 600ms (이전 500ms) — 더블클릭 임계값(500ms) 이상 확보
+            _mouseHook?.Suppress(TimeSpan.FromMilliseconds(600));
         }
         catch (Exception ex)
         {

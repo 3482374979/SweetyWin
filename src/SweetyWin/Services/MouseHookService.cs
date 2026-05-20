@@ -20,16 +20,26 @@ public sealed class MouseHookService : IDisposable
     private const int DragThresholdPx = 5;
     private static readonly TimeSpan PostShowCooldown = TimeSpan.FromMilliseconds(400);
 
+    private const int DoubleClickDistPx = 4;
+    private static readonly TimeSpan DoubleClickTime = TimeSpan.FromMilliseconds(500);
+
     private IntPtr _hook;
-    private readonly LowLevelMouseProc _proc;  // GC 보호 — 콜백 델리게이트는 살아있어야
+    private readonly LowLevelMouseProc _proc;  // GC 보호
     private User32Interop.POINT? _downPoint;
-    private readonly Action<User32Interop.POINT> _onDragComplete;
+    private readonly Action<User32Interop.POINT> _onSelectionTrigger;
+    private readonly Action<User32Interop.POINT> _onLeftClickAnywhere;
     private readonly Dispatcher _dispatcher;
     private DateTime _suppressUntil = DateTime.MinValue;
+    private DateTime _lastDownTime = DateTime.MinValue;
+    private User32Interop.POINT _lastDownPos;
+    private bool _pendingDoubleClickUp;
 
-    public MouseHookService(Action<User32Interop.POINT> onDragComplete)
+    public MouseHookService(
+        Action<User32Interop.POINT> onSelectionTrigger,
+        Action<User32Interop.POINT> onLeftClickAnywhere)
     {
-        _onDragComplete = onDragComplete;
+        _onSelectionTrigger = onSelectionTrigger;
+        _onLeftClickAnywhere = onLeftClickAnywhere;
         _dispatcher = Dispatcher.CurrentDispatcher;
         _proc = HookCallback;
         // 모듈 핸들은 0 (LL hook 은 모듈 불필요), dwThreadId=0 (모든 스레드)
@@ -62,7 +72,30 @@ public sealed class MouseHookService : IDisposable
             if (msg == WM_LBUTTONDOWN)
             {
                 var data = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
-                _downPoint = new User32Interop.POINT { X = data.pt.x, Y = data.pt.y };
+                var pt = new User32Interop.POINT { X = data.pt.x, Y = data.pt.y };
+                _downPoint = pt;
+
+                // 더블클릭 패턴 감지 — 이전 down 과 시간/거리 비교 (v0.1.3)
+                var dt = (DateTime.UtcNow - _lastDownTime).TotalMilliseconds;
+                var ddx = Math.Abs(pt.X - _lastDownPos.X);
+                var ddy = Math.Abs(pt.Y - _lastDownPos.Y);
+                _pendingDoubleClickUp = dt < DoubleClickTime.TotalMilliseconds
+                                        && ddx < DoubleClickDistPx
+                                        && ddy < DoubleClickDistPx
+                                        && _lastDownTime != DateTime.MinValue;
+                _lastDownTime = DateTime.UtcNow;
+                _lastDownPos = pt;
+
+                // 클릭아웃 감지 — suppress 무관, 항상 dispatch (v0.1.3)
+                _dispatcher.BeginInvoke(new Action(() =>
+                {
+                    try { _onLeftClickAnywhere(pt); }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"ClickAnywhere handler error: {ex}");
+                        LogService.Log($"MouseHook: clickAnywhere handler error: {ex.Message}");
+                    }
+                }));
             }
             else if (msg == WM_LBUTTONUP && _downPoint.HasValue)
             {
@@ -71,21 +104,23 @@ public sealed class MouseHookService : IDisposable
                 var down = _downPoint.Value;
                 _downPoint = null;
 
-                if (DateTime.UtcNow < _suppressUntil) return CallNextHookEx(_hook, nCode, wParam, lParam);
-
                 var dx = Math.Abs(up.X - down.X);
                 var dy = Math.Abs(up.Y - down.Y);
-                if (dx > DragThresholdPx || dy > DragThresholdPx)
+                var isDrag = (dx > DragThresholdPx || dy > DragThresholdPx);
+                var isDoubleClick = _pendingDoubleClickUp;
+                _pendingDoubleClickUp = false;
+
+                if (DateTime.UtcNow >= _suppressUntil && (isDrag || isDoubleClick))
                 {
-                    LogService.Log($"MouseHook: drag detected dx={dx} dy={dy} → dispatch");
-                    // hook 콜백에서 블록 금지 — UI 스레드로 dispatch (BeginInvoke 비동기)
+                    var trigger = isDrag ? "drag" : "doubleclick";
+                    LogService.Log($"MouseHook: trigger ({trigger}) dx={dx} dy={dy}");
                     _dispatcher.BeginInvoke(new Action(() =>
                     {
-                        try { _onDragComplete(up); }
+                        try { _onSelectionTrigger(up); }
                         catch (Exception ex)
                         {
-                            Debug.WriteLine($"Drag handler error: {ex}");
-                            LogService.Log($"MouseHook: drag handler error: {ex.Message}");
+                            Debug.WriteLine($"SelectionTrigger handler error: {ex}");
+                            LogService.Log($"MouseHook: selection handler error: {ex.Message}");
                         }
                     }));
                 }

@@ -35,17 +35,31 @@
                        Margin="6,0,6,4"
                        MaxWidth="380"/>
 
-            <!-- 액션 행 — 항상 표시 -->
-            <StackPanel Orientation="Horizontal">
-                <Button x:Name="CopyBtn" Content="복사" Style="{StaticResource PaletteActionButton}"
-                        Click="OnCopyClicked"/>
-                <Button x:Name="TranslateBtn" Content="번역" Style="{StaticResource PaletteActionButton}"
-                        Click="OnTranslateClicked"/>
-                <Button x:Name="DictionaryBtn" Content="사전" Style="{StaticResource PaletteActionButton}"
-                        Click="OnDictionaryClicked"/>
-                <Button x:Name="SearchBtn" Content="검색" Style="{StaticResource PaletteActionButton}"
-                        Click="OnSearchClicked"/>
-            </StackPanel>
+            <!-- 액션 행 — 항상 표시. 좌측=버튼, 우측="LIPSON Inc." 각인 (v0.1.3) -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button x:Name="CopyBtn" Content="복사" Style="{StaticResource PaletteActionButton}"
+                            Click="OnCopyClicked"/>
+                    <Button x:Name="TranslateBtn" Content="번역" Style="{StaticResource PaletteActionButton}"
+                            Click="OnTranslateClicked"/>
+                    <Button x:Name="DictionaryBtn" Content="사전" Style="{StaticResource PaletteActionButton}"
+                            Click="OnDictionaryClicked"/>
+                    <Button x:Name="SearchBtn" Content="검색" Style="{StaticResource PaletteActionButton}"
+                            Click="OnSearchClicked"/>
+                </StackPanel>
+                <TextBlock Grid.Column="1"
+                           Text="LIPSON Inc."
+                           FontSize="9"
+                           FontStyle="Italic"
+                           Foreground="{StaticResource PaletteTertiary}"
+                           Opacity="0.7"
+                           VerticalAlignment="Center"
+                           Margin="12,0,4,0"/>
+            </Grid>
 
             <!-- 번역 결과 패널 — IsVisible 토글 -->
             <Border x:Name="TranslationPanel"
