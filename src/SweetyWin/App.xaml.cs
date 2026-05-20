@@ -32,6 +32,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        LogService.Init();
 
         // ── 단일 인스턴스 ────────────────────────────────────────
         _singleInstanceMutex = new Mutex(initiallyOwned: false, name: SingleInstanceMutexName, createdNew: out var created);
@@ -82,23 +83,40 @@ public partial class App : Application
     /// <summary>드래그 종료 시 호출 — 캡처 후 텍스트 있으면 팝업 표시.</summary>
     private async void HandleDragSelectComplete()
     {
-        if (_quickPop == null || _selection == null || _settings == null) return;
-        if (_quickPop.IsVisible) return; // 이미 표시 중이면 무시
+        if (_quickPop == null || _selection == null || _settings == null)
+        {
+            LogService.Log("Drag-show: services not ready");
+            return;
+        }
+        if (_quickPop.IsVisible)
+        {
+            LogService.Log("Drag-show: popup already visible — ignored");
+            return;
+        }
 
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
             var text = await _selection.CaptureAsync(cts.Token).ConfigureAwait(true);
-            if (string.IsNullOrWhiteSpace(text)) return;
-            if (text.Length < _settings.Current.MinAutoShowTextLength) return;
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                LogService.Log("Drag-show: capture empty — no popup");
+                return;
+            }
+            if (text.Length < _settings.Current.MinAutoShowTextLength)
+            {
+                LogService.Log($"Drag-show: text too short ({text.Length} < {_settings.Current.MinAutoShowTextLength})");
+                return;
+            }
 
-            // 팝업 표시 — 직후 짧은 마우스 hook suppress (자체 클릭으로 재트리거 방지)
+            LogService.Log($"Drag-show: showing popup with {text.Length} chars");
             _quickPop.ShowWithText(text);
             _mouseHook?.Suppress(TimeSpan.FromMilliseconds(500));
         }
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Drag-show failed: {ex.Message}");
+            LogService.Log($"Drag-show exception: {ex.Message}");
         }
     }
 
@@ -113,10 +131,15 @@ public partial class App : Application
             () => _quickPop?.ToggleNearCursor());
         if (id < 0)
         {
+            LogService.Log($"Hotkey registration FAILED (mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X})");
             MessageBox.Show(
                 "Failed to register global hotkey — another app may be using it.\n" +
                 "기본값: Ctrl+Shift+Space. 설정에서 settings.json 으로 변경 가능.",
                 "SweetyWin", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+        else
+        {
+            LogService.Log($"Hotkey registered id={id} mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X}");
         }
     }
 

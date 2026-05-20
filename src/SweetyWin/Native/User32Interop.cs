@@ -151,6 +151,13 @@ public static class User32Interop
     [DllImport("user32.dll", SetLastError = true)]
     public static extern uint SendInput(uint nInputs, [In] INPUT[] pInputs, int cbSize);
 
+    /// <summary>
+    /// 클립보드 시퀀스 번호 — 클립보드 내용이 바뀔 때마다 증가.
+    /// Clipboard.ContainsText 폴링보다 가볍고 race-free.
+    /// </summary>
+    [DllImport("user32.dll")]
+    public static extern uint GetClipboardSequenceNumber();
+
     /// <summary>현재 포커스된 컨트롤에 Ctrl+C 전송 — 선택된 텍스트를 클립보드로 복사.</summary>
     public static void SendCtrlC()
     {

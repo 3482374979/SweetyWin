@@ -54,7 +54,16 @@ public partial class SettingsWindow : Window
         var path = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "SweetyWin", "settings.json");
+        OpenFileSafe(path);
+    }
 
+    private void OnOpenLog(object? sender, RoutedEventArgs e)
+    {
+        OpenFileSafe(LogService.LogPath);
+    }
+
+    private void OpenFileSafe(string path)
+    {
         try
         {
             Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });

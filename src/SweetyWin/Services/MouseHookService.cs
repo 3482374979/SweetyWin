@@ -36,7 +36,13 @@ public sealed class MouseHookService : IDisposable
         _hook = SetWindowsHookEx(WH_MOUSE_LL, _proc, IntPtr.Zero, 0);
         if (_hook == IntPtr.Zero)
         {
-            Debug.WriteLine($"SetWindowsHookEx failed: {Marshal.GetLastWin32Error()}");
+            var err = Marshal.GetLastWin32Error();
+            Debug.WriteLine($"SetWindowsHookEx failed: {err}");
+            LogService.Log($"MouseHook: SetWindowsHookEx failed err={err}");
+        }
+        else
+        {
+            LogService.Log($"MouseHook: installed (handle=0x{_hook.ToInt64():X})");
         }
     }
 
@@ -71,11 +77,16 @@ public sealed class MouseHookService : IDisposable
                 var dy = Math.Abs(up.Y - down.Y);
                 if (dx > DragThresholdPx || dy > DragThresholdPx)
                 {
+                    LogService.Log($"MouseHook: drag detected dx={dx} dy={dy} → dispatch");
                     // hook 콜백에서 블록 금지 — UI 스레드로 dispatch (BeginInvoke 비동기)
                     _dispatcher.BeginInvoke(new Action(() =>
                     {
                         try { _onDragComplete(up); }
-                        catch (Exception ex) { Debug.WriteLine($"Drag handler error: {ex}"); }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"Drag handler error: {ex}");
+                            LogService.Log($"MouseHook: drag handler error: {ex.Message}");
+                        }
                     }));
                 }
             }

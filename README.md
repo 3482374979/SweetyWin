@@ -54,6 +54,22 @@ Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\setti
 - 좌클릭 → QuickPop 토글 (핫키와 동일)
 - 우클릭 → 메뉴 (열기 / 설정 / 종료)
 
+## 진단 (동작 안 함 신고 시)
+
+설정 → "로그 파일 열기" → `%LOCALAPPDATA%\SweetyWin\sweetywin.log` 내용 공유.
+- 마우스 후킹 설치 여부
+- 핫키 등록 여부
+- 캡처 방법 (UIA vs Ctrl+C) 및 결과
+- 번역 시도 결과 (provider, 길이, 에러)
+
+특정 앱에서 안 될 때 어떤 앱인지(앱 이름·버전) 함께 공유 부탁드립니다.
+
+## 호환성 노트
+
+- **UIA 미지원 앱**(일부 게임·구식 win32 앱·일부 한국 소프트웨어) → Ctrl+C fallback 시도
+- **관리자 권한으로 실행되는 앱** → 일반 권한 SweetyWin 이 마우스/키 후킹 못 함 (UIPI). SweetyWin 도 관리자 권한 실행 필요.
+- **Electron 앱(Slack/Discord/VSCode)** → 보통 잘 동작
+
 ## Build
 
 CI builds on every push to `main` and on `v*` tags. Local build requires Windows + .NET 8 SDK:

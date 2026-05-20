@@ -72,6 +72,14 @@
             <TextBlock Text="HKCU\Run 레지스트리 — 관리자 권한 불필요."
                        FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,16" TextWrapping="Wrap"/>
 
+            <!-- ── 진단 (v0.1.2) ────────────────────────────────────── -->
+            <TextBlock Text="진단" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,12"/>
+            <TextBlock Text="동작 안 함 신고 시 아래 로그를 공유해주세요. 캡처/핫키/마우스 후킹 결과가 기록됩니다."
+                       FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,6" TextWrapping="Wrap"/>
+            <Button x:Name="OpenLogBtn" Content="로그 파일 열기"
+                    HorizontalAlignment="Left" Margin="0,0,0,16"
+                    Click="OnOpenLog"/>
+
             <!-- ── 액션 버튼 ──────────────────────────────────────────── -->
             <Border BorderBrush="#33FFFFFF" BorderThickness="0,1,0,0" Margin="0,12,0,0" Padding="0,12,0,0">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
