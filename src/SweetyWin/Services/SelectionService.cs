@@ -58,15 +58,11 @@ public sealed class SelectionService
                         return string.Empty;
                     }
 
-                    // (v0.1.3) 1. focused 자신 → ancestor 5단계 까지 TextPattern 탐색
+                    // (v0.1.3) focused 자신 → ancestor 5단계 까지 TextPattern 탐색
                     var t1 = TryTextPatternAncestor(focused);
                     if (!string.IsNullOrEmpty(t1)) return t1;
 
-                    // (v0.1.3) 2. LegacyIAccessiblePattern (MSAA) fallback — 일부 win32 legacy 앱
-                    var t2 = TryLegacyPattern(focused);
-                    if (!string.IsNullOrEmpty(t2)) return t2;
-
-                    LogService.Log($"UIA: no TextPattern/Legacy in {focused.Current.ControlType?.ProgrammaticName}");
+                    LogService.Log($"UIA: no TextPattern in ancestors of {focused.Current.ControlType?.ProgrammaticName}");
                     return string.Empty;
                 }
                 catch (Exception ex)
@@ -117,45 +113,6 @@ public sealed class SelectionService
 
             try { current = TreeWalker.RawViewWalker.GetParent(current); }
             catch { break; }
-        }
-        return string.Empty;
-    }
-
-    /// <summary>(v0.1.3) LegacyIAccessiblePattern — MSAA 기반, UIA TextPattern 미지원 앱용 fallback.</summary>
-    private static string TryLegacyPattern(AutomationElement element)
-    {
-        try
-        {
-            if (element.TryGetCurrentPattern(LegacyIAccessiblePattern.Pattern, out var lp)
-                && lp is LegacyIAccessiblePattern legacy)
-            {
-                // GetSelection() 으로 선택 항목 → Name 또는 Value
-                try
-                {
-                    var sel = legacy.GetSelection();
-                    if (sel != null && sel.Length > 0)
-                    {
-                        var n = sel[0].Current.Name;
-                        if (!string.IsNullOrEmpty(n))
-                        {
-                            LogService.Log("UIA: Legacy GetSelection Name hit");
-                            return n.Trim();
-                        }
-                    }
-                }
-                catch { /* GetSelection 미지원 — Value 시도 */ }
-
-                var v = legacy.Current.Value;
-                if (!string.IsNullOrEmpty(v))
-                {
-                    LogService.Log("UIA: Legacy Value hit");
-                    return v.Trim();
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            LogService.Log($"UIA Legacy exception: {ex.Message}");
         }
         return string.Empty;
     }
