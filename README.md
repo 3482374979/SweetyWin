@@ -16,8 +16,8 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 - [x] **Phase 1** — Project scaffold, single-instance, global hotkey, popup window
 - [x] **Phase 2** — SelectionService (UI Automation + Ctrl+C clipboard fallback)
 - [x] **Phase 3** — Translation pipeline (MyMemory default + DeepL when API key set), inline result panel with auto language detection
-- [ ] **Phase 4** — Settings UI + system tray + auto-start
-- [ ] **Phase 5** — Clipboard history (optional)
+- [x] **Phase 4** — System tray icon, auto-start (HKCU\Run), settings window
+- [ ] **Phase 5** — Hotkey recorder UI, clipboard history (optional)
 
 ## How it works
 
@@ -31,7 +31,7 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 
 ## Settings
 
-`%LOCALAPPDATA%\SweetyWin\settings.json` (created on first run):
+Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\settings.json` 직접 편집.
 
 ```json
 {
@@ -41,7 +41,14 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 }
 ```
 
-`HotkeyModifiers`: `2`=Ctrl, `4`=Shift, `1`=Alt, `8`=Win (combinable). `HotkeyVk` is the Win32 VK code (space = `0x20`).
+- `HotkeyModifiers`: `2`=Ctrl, `4`=Shift, `1`=Alt, `8`=Win (combinable)
+- `HotkeyVk`: Win32 VK code (space = `0x20`)
+- 설정창에서 DeepL 키 + 자동 시작 토글 가능. 핫키 변경은 settings.json 편집 후 앱 재시작.
+
+## Tray
+
+- 좌클릭 → QuickPop 토글 (핫키와 동일)
+- 우클릭 → 메뉴 (열기 / 설정 / 종료)
 
 ## Build
 

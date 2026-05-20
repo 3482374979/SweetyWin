@@ -6,6 +6,8 @@
     <RootNamespace>SweetyWin</RootNamespace>
     <AssemblyName>SweetyWin</AssemblyName>
     <UseWPF>true</UseWPF>
+    <!-- NotifyIcon (트레이) 를 위해 WinForms 활성화. WPF 와 공존 가능. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
