@@ -14,6 +14,12 @@ public sealed class SweetyWinSettings
     /// <summary>핫키 — VK 코드 + 수정자 비트마스크. 기본 Ctrl+Shift+Space.</summary>
     public uint HotkeyVk { get; set; } = 0x20;       // VK_SPACE
     public uint HotkeyModifiers { get; set; } = 0x06; // MOD_CONTROL(2) | MOD_SHIFT(4)
+
+    /// <summary>드래그-선택 종료 시 자동으로 팝업 표시.</summary>
+    public bool AutoShowOnDragSelect { get; set; } = true;
+
+    /// <summary>드래그-자동 표시 시 선택 텍스트 최소 길이 (단일 클릭 노이즈 필터).</summary>
+    public int MinAutoShowTextLength { get; set; } = 2;
 }
 
 /// <summary>

@@ -23,6 +23,7 @@ public partial class App : Application
     private SelectionService? _selection;
     private TranslationService? _translation;
     private HotkeyService? _hotkeyService;
+    private MouseHookService? _mouseHook;
     private TrayIconService? _tray;
     private HttpClient? _http;
     private QuickPopWindow? _quickPop;
@@ -70,6 +71,35 @@ public partial class App : Application
         // ── 글로벌 핫키 ──────────────────────────────────────────
         _hotkeyService = new HotkeyService();
         RegisterHotkeyFromSettings();
+
+        // ── 드래그-선택 자동 표시 (v0.1.1) ────────────────────────
+        if (_settings.Current.AutoShowOnDragSelect)
+        {
+            _mouseHook = new MouseHookService(_ => HandleDragSelectComplete());
+        }
+    }
+
+    /// <summary>드래그 종료 시 호출 — 캡처 후 텍스트 있으면 팝업 표시.</summary>
+    private async void HandleDragSelectComplete()
+    {
+        if (_quickPop == null || _selection == null || _settings == null) return;
+        if (_quickPop.IsVisible) return; // 이미 표시 중이면 무시
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var text = await _selection.CaptureAsync(cts.Token).ConfigureAwait(true);
+            if (string.IsNullOrWhiteSpace(text)) return;
+            if (text.Length < _settings.Current.MinAutoShowTextLength) return;
+
+            // 팝업 표시 — 직후 짧은 마우스 hook suppress (자체 클릭으로 재트리거 방지)
+            _quickPop.ShowWithText(text);
+            _mouseHook?.Suppress(TimeSpan.FromMilliseconds(500));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Drag-show failed: {ex.Message}");
+        }
     }
 
     /// <summary>설정 기반 핫키 등록 — 설정 변경 후 재등록 가능.</summary>
@@ -108,6 +138,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _mouseHook?.Dispose();
         _hotkeyService?.Dispose();
         _tray?.Dispose();
         _quickPop?.Close();

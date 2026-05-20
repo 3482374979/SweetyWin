@@ -75,7 +75,7 @@ public partial class QuickPopWindow : Window
         // 표시 전에 선택 텍스트 캡처 (UIA → 클립보드 fallback)
         try
         {
-            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(2));
             SelectedText = await _selection.CaptureAsync(cts.Token).ConfigureAwait(true);
         }
         catch (Exception ex)
@@ -85,7 +85,32 @@ public partial class QuickPopWindow : Window
         }
 
         CloseTranslationPanel(); // 이전 번역 결과 초기화
+        UpdateSelectionPreview();
         ShowAtCursor();
+    }
+
+    /// <summary>드래그-선택 자동 트리거 — 미리 캡처된 텍스트가 있으면 그대로 사용.</summary>
+    public void ShowWithText(string text)
+    {
+        SelectedText = text ?? string.Empty;
+        CloseTranslationPanel();
+        UpdateSelectionPreview();
+        ShowAtCursor();
+    }
+
+    private void UpdateSelectionPreview()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedText))
+        {
+            SelectionPreview.Text = "선택 없음 — 텍스트를 드래그하거나 Ctrl+C 후 다시 시도";
+            SelectionPreview.Opacity = 0.6;
+        }
+        else
+        {
+            var single = SelectedText.Replace("\r", " ").Replace("\n", " ");
+            SelectionPreview.Text = $"“{single}”";
+            SelectionPreview.Opacity = 1.0;
+        }
     }
 
     public void ToggleNearCursor()
@@ -157,7 +182,14 @@ public partial class QuickPopWindow : Window
     {
         if (string.IsNullOrWhiteSpace(SelectedText))
         {
-            // 선택 텍스트가 없으면 무동작 (사용자 피드백 위해 hide 만)
+            // v0.1.1: 빈 선택 명시 피드백 — 사용자가 클릭이 안 먹는다고 오인 방지
+            TranslationPanel.Visibility = Visibility.Visible;
+            SourceTextBlock.Text = "(선택된 텍스트 없음)";
+            TranslatedTextBlock.Text = "텍스트를 드래그-선택한 뒤 다시 시도하세요.\n또는 텍스트를 클립보드에 복사한 뒤 Ctrl+Shift+Space.";
+            TranslationHeader.Text = "안내";
+            ProviderLabel.Text = string.Empty;
+            LoadingIndicator.Visibility = Visibility.Collapsed;
+            UpdateLayout();
             return;
         }
 

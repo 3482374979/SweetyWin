@@ -16,8 +16,9 @@ namespace SweetyWin.Services;
 /// </summary>
 public sealed class SelectionService
 {
-    private const int ClipboardWaitMs = 80;
-    private const int UiaTimeoutMs = 250;
+    // v0.1.1: 80ms 가 너무 짧아 일부 환경에서 클립보드 commit 못 잡음 → 250ms
+    private const int ClipboardWaitMs = 250;
+    private const int UiaTimeoutMs = 400;
 
     /// <summary>현재 포커스된 컨트롤의 선택 텍스트를 비동기로 캡처.</summary>
     /// <returns>선택 텍스트. 캡처 실패 시 빈 문자열.</returns>

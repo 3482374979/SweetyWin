@@ -22,6 +22,7 @@ public partial class SettingsWindow : Window
         var s = _settings.Current;
         DeepLKeyBox.Password = s.DeepLApiKey ?? string.Empty;
         AutoStartCheck.IsChecked = AutoStartService.IsEnabled;
+        AutoShowOnDragCheck.IsChecked = s.AutoShowOnDragSelect;
         HotkeyDisplay.Text = FormatHotkey(s.HotkeyModifiers, s.HotkeyVk);
     }
 
@@ -72,6 +73,9 @@ public partial class SettingsWindow : Window
         // DeepL 키 — 빈 문자열이면 null 로 저장 (provider IsAvailable=false 로 떨어짐)
         var key = DeepLKeyBox.Password.Trim();
         s.DeepLApiKey = string.IsNullOrEmpty(key) ? null : key;
+
+        // 드래그-자동 표시 — 변경은 다음 앱 시작부터 반영 (mouse hook 재설치 필요)
+        s.AutoShowOnDragSelect = AutoShowOnDragCheck.IsChecked == true;
 
         _settings.Save();
 

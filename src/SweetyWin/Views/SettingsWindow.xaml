@@ -60,6 +60,12 @@
                     HorizontalAlignment="Left" Margin="0,0,0,16"
                     Click="OnOpenSettingsFile"/>
 
+            <!-- ── 동작 섹션 (v0.1.1) ──────────────────────────────── -->
+            <TextBlock Text="동작" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,12"/>
+            <CheckBox x:Name="AutoShowOnDragCheck" Content="드래그-선택 종료 시 자동으로 팝업 표시"/>
+            <TextBlock Text="끄면 Ctrl+Shift+Space 핫키만으로 표시. 자동 표시는 글로벌 마우스 후킹 사용."
+                       FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,16" TextWrapping="Wrap"/>
+
             <!-- ── 시작 섹션 ──────────────────────────────────────────── -->
             <TextBlock Text="시작" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,12"/>
             <CheckBox x:Name="AutoStartCheck" Content="Windows 로그인 시 자동 실행"/>

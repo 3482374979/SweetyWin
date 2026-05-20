@@ -21,7 +21,11 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 
 ## How it works
 
-1. Press `Ctrl+Shift+Space` after selecting text in any app
+**자동 트리거 (v0.1.1+)**: 텍스트를 드래그-선택하고 마우스 떼면 자동으로 팝업이 떠오릅니다. 설정에서 끌 수 있습니다.
+
+**수동 트리거**: `Ctrl+Shift+Space` 누르면 현재 선택 텍스트로 팝업.
+
+1. Drag-select text **OR** press `Ctrl+Shift+Space` after selecting
 2. SelectionService captures the selection via UIA (no clipboard pollution); falls back to Ctrl+C + clipboard read/restore for non-UIA apps
 3. QuickPop appears near cursor with action buttons
 4. Click **번역** → result panel expands inline; auto-detects source language (Hangul/Kana/Han/Latin/Cyrillic heuristic) and infers target (Korean → English, else → Korean)

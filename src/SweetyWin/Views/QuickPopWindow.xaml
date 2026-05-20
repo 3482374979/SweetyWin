@@ -26,6 +26,15 @@
         </Border.Effect>
 
         <StackPanel>
+            <!-- 선택 텍스트 미리보기 (v0.1.1) — 한 줄, 30자 ellipsis -->
+            <TextBlock x:Name="SelectionPreview"
+                       Text=""
+                       FontSize="10"
+                       Foreground="{StaticResource PaletteTertiary}"
+                       TextTrimming="CharacterEllipsis"
+                       Margin="6,0,6,4"
+                       MaxWidth="380"/>
+
             <!-- 액션 행 — 항상 표시 -->
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="CopyBtn" Content="복사" Style="{StaticResource PaletteActionButton}"
