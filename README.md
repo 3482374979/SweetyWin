@@ -70,6 +70,17 @@ Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\setti
 
 **안정성 (v0.1.5+)**: WH_MOUSE_LL 후킹을 **전용 BG 스레드** 에서 실행. UI 가 무거운 작업(번역 API 호출, 렌더링) 중이어도 마우스 이벤트는 지연 없이 처리. 전역 예외 핸들러로 어떤 비정상 상황에서도 강제 종료 방지.
 
+**자동시작 & 리소스 최적화 (v0.2.0+)**:
+- HKCU\Run 경로 자가 치유 — exe 이동해도 다음 실행에서 registry 자동 갱신
+- 시작 시 silent — 로그인 시 MessageBox 차단 없음, 트레이 툴팁에 상태 표시
+- SetWindowsHookEx 3회 재시도(500ms 백오프) — AV 일시 차단 대응
+- explorer.exe 재시작 시 트레이 자동 부활 — TaskbarCreated 메시지 핸들
+- 번역 LRU 캐시 (50 entries) — 같은 텍스트 반복 시 네트워크 0회
+- 설정 파일 원자적 쓰기 (.tmp → rename) — 충돌 시 손상 방지
+- 로그 파일 자동 회전 (1MB) — 매 100건마다 체크
+- 클릭아웃 dispatch 50ms throttle — 빠른 클릭 큐 적체 방지
+- AccessViolationException 명시 catch — UIA 호출 안전성
+
 캡처 경로 (v0.1.3 기준, 순차 시도):
 1. **UIA TextPattern** — focused element 자신부터 ancestor 5단계까지 탐색
 2. **UIA LegacyIAccessiblePattern** (MSAA fallback) — win32 legacy 앱용

@@ -56,11 +56,11 @@ public partial class App : Application
         };
 
         // ── 단일 인스턴스 ────────────────────────────────────────
+        // (v0.2.0) silent — 로그인 시 MessageBox 차단 회피. 로그만 남기고 종료.
         _singleInstanceMutex = new Mutex(initiallyOwned: false, name: SingleInstanceMutexName, createdNew: out var created);
         if (!created)
         {
-            MessageBox.Show("SweetyWin is already running.", "SweetyWin",
-                MessageBoxButton.OK, MessageBoxImage.Information);
+            LogService.Log("SweetyWin already running — exiting silently");
             _singleInstanceMutex.Dispose();
             _singleInstanceMutex = null;
             Shutdown();
@@ -92,7 +92,13 @@ public partial class App : Application
 
         // ── 글로벌 핫키 ──────────────────────────────────────────
         _hotkeyService = new HotkeyService();
-        RegisterHotkeyFromSettings();
+        bool hotkeyOk = RegisterHotkeyFromSettings();
+
+        // (v0.2.0) AutoStart 자가 치유 — exe 이동 시 registry 갱신
+        AutoStartService.SyncRegistryToCurrentPath();
+
+        // (v0.2.0) 트레이 툴팁 — 상태 반영
+        UpdateTrayStatus(hotkeyOk);
 
         // ── 드래그/더블클릭 자동 표시 + 클릭아웃 hide (v0.1.3) ──
         if (_settings.Current.AutoShowOnDragSelect)
@@ -163,10 +169,11 @@ public partial class App : Application
         }
     }
 
-    /// <summary>설정 기반 핫키 등록 — 설정 변경 후 재등록 가능.</summary>
-    private void RegisterHotkeyFromSettings()
+    /// <summary>설정 기반 핫키 등록. (v0.2.0) silent fail — 로그인 시 MessageBox 차단 회피.</summary>
+    /// <returns>등록 성공 여부 (트레이 툴팁 갱신용).</returns>
+    private bool RegisterHotkeyFromSettings()
     {
-        if (_hotkeyService == null || _settings == null) return;
+        if (_hotkeyService == null || _settings == null) return false;
         var s = _settings.Current;
         var id = _hotkeyService.Register(
             (HotkeyModifiers)s.HotkeyModifiers,
@@ -175,15 +182,30 @@ public partial class App : Application
         if (id < 0)
         {
             LogService.Log($"Hotkey registration FAILED (mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X})");
-            MessageBox.Show(
-                "Failed to register global hotkey — another app may be using it.\n" +
-                "기본값: Ctrl+Shift+Space. 설정에서 settings.json 으로 변경 가능.",
-                "SweetyWin", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return false;
         }
+        LogService.LogInfo($"Hotkey registered id={id} mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X}");
+        return true;
+    }
+
+    /// <summary>(v0.2.0) 트레이 툴팁 — 핫키/후킹 상태 반영.</summary>
+    private void UpdateTrayStatus(bool hotkeyOk)
+    {
+        var ver = typeof(App).Assembly.GetName().Version;
+        var verStr = ver != null ? $"v{ver.Major}.{ver.Minor}.{ver.Build}" : "";
+        var hookOk = _mouseHook?.IsInstalled ?? false;
+
+        string status;
+        if (!hotkeyOk && !hookOk)
+            status = $"SweetyWin {verStr} — 핫키·마우스후킹 모두 실패";
+        else if (!hotkeyOk)
+            status = $"SweetyWin {verStr} — 핫키 충돌 (트레이 클릭으로 사용)";
+        else if (!hookOk)
+            status = $"SweetyWin {verStr} — 마우스후킹 비활성 (핫키만 사용)";
         else
-        {
-            LogService.LogInfo($"Hotkey registered id={id} mods={s.HotkeyModifiers:X} vk={s.HotkeyVk:X}");
-        }
+            status = $"SweetyWin {verStr} — Ctrl+Shift+Space";
+
+        _tray?.UpdateTooltip(status);
     }
 
     /// <summary>설정창 표시 — 중복 열기 방지.</summary>

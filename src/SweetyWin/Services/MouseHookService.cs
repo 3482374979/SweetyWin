@@ -53,6 +53,13 @@ public sealed class MouseHookService : IDisposable
     private readonly object _suppressLock = new();
     private DateTime _suppressUntil = DateTime.MinValue;
 
+    // (v0.2.0) click-outside dispatch throttle — 50ms 안 연속 클릭 시 BeginInvoke 큐 적체 방지
+    private DateTime _lastClickDispatch = DateTime.MinValue;
+    private const int ClickDispatchThrottleMs = 50;
+
+    /// <summary>(v0.2.0) hook 설치 성공 여부 — App 이 트레이 툴팁 갱신용으로 조회.</summary>
+    public bool IsInstalled => _hook != IntPtr.Zero;
+
     public MouseHookService(
         Action<User32Interop.POINT> onSelectionTrigger,
         Action<User32Interop.POINT> onLeftClickAnywhere)
@@ -84,12 +91,19 @@ public sealed class MouseHookService : IDisposable
         {
             _hookThreadId = GetCurrentThreadId();
             _proc = HookCallback;   // GC 보호: 인스턴스 필드로 보존
-            _hook = SetWindowsHookEx(WH_MOUSE_LL, _proc, IntPtr.Zero, 0);
+
+            // (v0.2.0) 안티바이러스가 최초 1-2회 차단했다가 허용하는 케이스 — 3회 재시도
+            for (int attempt = 0; attempt < 3; attempt++)
+            {
+                _hook = SetWindowsHookEx(WH_MOUSE_LL, _proc, IntPtr.Zero, 0);
+                if (_hook != IntPtr.Zero) break;
+                var err = Marshal.GetLastWin32Error();
+                LogService.Log($"MouseHook: SetWindowsHookEx attempt {attempt + 1}/3 failed err={err}");
+                Thread.Sleep(500);
+            }
             if (_hook == IntPtr.Zero)
             {
-                var err = Marshal.GetLastWin32Error();
-                Debug.WriteLine($"SetWindowsHookEx failed: {err}");
-                LogService.Log($"MouseHook: SetWindowsHookEx failed err={err}");
+                LogService.Log("MouseHook: all 3 install attempts failed — fallback to hotkey-only mode");
                 return;
             }
             LogService.LogInfo($"MouseHook: installed on bg thread (handle=0x{_hook.ToInt64():X})");
@@ -146,16 +160,21 @@ public sealed class MouseHookService : IDisposable
                 _lastDownTime = DateTime.UtcNow;
                 _lastDownPos = pt;
 
-                // 클릭아웃 감지 — UI 스레드로 dispatch (BeginInvoke 비동기)
-                _uiDispatcher.BeginInvoke(new Action(() =>
+                // (v0.2.0) throttle — 50ms 안 연속 LBUTTONDOWN 시 dispatch skip (큐 적체 방지)
+                var sinceLast = (DateTime.UtcNow - _lastClickDispatch).TotalMilliseconds;
+                if (sinceLast >= ClickDispatchThrottleMs)
                 {
-                    try { _onLeftClickAnywhere(pt); }
-                    catch (Exception ex)
+                    _lastClickDispatch = DateTime.UtcNow;
+                    _uiDispatcher.BeginInvoke(new Action(() =>
                     {
-                        Debug.WriteLine($"ClickAnywhere handler error: {ex}");
-                        LogService.Log($"MouseHook: clickAnywhere handler error: {ex.Message}");
-                    }
-                }));
+                        try { _onLeftClickAnywhere(pt); }
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine($"ClickAnywhere handler error: {ex}");
+                            LogService.Log($"MouseHook: clickAnywhere handler error: {ex.Message}");
+                        }
+                    }));
+                }
             }
             else // WM_LBUTTONUP
             {

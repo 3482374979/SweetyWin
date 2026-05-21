@@ -17,6 +17,8 @@ namespace SweetyWin.Translation;
 public sealed class TranslationService
 {
     private readonly List<ITranslationProvider> _providers;
+    // (v0.2.0) LRU 캐시 — 같은 텍스트 반복 번역 시 네트워크 0회
+    private readonly LruCache<string, TranslationResult> _cache = new(50);
 
     public TranslationService(SettingsService settings, HttpClient? sharedHttp = null)
     {
@@ -48,13 +50,27 @@ public sealed class TranslationService
             ? LanguageDetector.InferTarget(detected)
             : target;
 
+        // (v0.2.0) LRU 캐시 조회 — provider 비종속, 트림 후 lowercase key
+        var cacheKey = $"{detected}|{resolvedTarget}|{text.Trim()}";
+        if (_cache.TryGet(cacheKey, out var cached))
+        {
+            SweetyWin.Services.LogService.LogInfo($"Translate cache HIT [{cached.ProviderName}]");
+            return cached;
+        }
+
         Exception? lastError = null;
         foreach (var provider in _providers.Where(p => p.IsAvailable))
         {
             try
             {
-                return await provider.TranslateAsync(text, detected, resolvedTarget, ct)
+                var result = await provider.TranslateAsync(text, detected, resolvedTarget, ct)
                     .ConfigureAwait(false);
+                // 빈 결과는 캐시 안 함 (실패 가능성)
+                if (!string.IsNullOrEmpty(result.Text))
+                {
+                    _cache.Put(cacheKey, result);
+                }
+                return result;
             }
             catch (Exception ex) when (!(ex is OperationCanceledException))
             {

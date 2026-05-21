@@ -22,6 +22,8 @@ public static class LogService
 
     private static readonly object Sync = new();
     private const long MaxBytes = 1_000_000;
+    // (v0.2.0) 매 쓰기마다 fs 체크는 비용 → 100건마다 체크
+    private static int _writesSinceCheck;
 
     public static void Init()
     {
@@ -49,6 +51,20 @@ public static class LogService
         {
             lock (Sync)
             {
+                // (v0.2.0) 매 100건 마다 회전 체크 — 장시간 실행 시 무한 성장 방지
+                if (++_writesSinceCheck > 100)
+                {
+                    _writesSinceCheck = 0;
+                    try
+                    {
+                        if (File.Exists(LogPath))
+                        {
+                            var info = new FileInfo(LogPath);
+                            if (info.Length > MaxBytes) File.Delete(LogPath);
+                        }
+                    }
+                    catch { /* 회전 실패 무시 */ }
+                }
                 File.AppendAllText(LogPath, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
             }
         }

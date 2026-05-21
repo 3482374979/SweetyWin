@@ -65,6 +65,12 @@ public sealed class SelectionService
                     LogService.LogInfo($"UIA: no TextPattern in ancestors of {focused.Current.ControlType?.ProgrammaticName}");
                     return string.Empty;
                 }
+                catch (AccessViolationException av)
+                {
+                    // (v0.2.0) 일부 앱의 UIA 호출이 AVE throw — 명시 catch 로 안전 종료
+                    LogService.Log($"UIA AccessViolationException: {av.Message}");
+                    return string.Empty;
+                }
                 catch (Exception ex)
                 {
                     LogService.LogInfo($"UIA exception: {ex.GetType().Name} {ex.Message}");

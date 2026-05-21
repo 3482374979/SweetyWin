@@ -85,7 +85,11 @@ public sealed class SettingsService
         {
             Directory.CreateDirectory(SettingsDirectory);
             var json = JsonSerializer.Serialize(Current, JsonOpts);
-            File.WriteAllText(SettingsPath, json);
+            // (v0.2.0) 원자적 쓰기 — tmp 에 쓰고 NTFS atomic rename 으로 commit.
+            // 도중 강제 종료 발생해도 settings.json 손상 없이 이전 상태 유지.
+            var tmp = SettingsPath + ".tmp";
+            File.WriteAllText(tmp, json);
+            File.Move(tmp, SettingsPath, overwrite: true);
         }
         catch (Exception ex)
         {
