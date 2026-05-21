@@ -42,7 +42,7 @@ public partial class App : Application
         // (v0.1.5) 글로벌 예외 핸들러 — 강제 종료 방지 + 원인 로그
         AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
         {
-            LogService.Log($"FATAL UnhandledException: {ev.ExceptionObject}");
+            LogService.Log($"FATAL UnhandledException (terminating={ev.IsTerminating}): {ev.ExceptionObject}");
         };
         TaskScheduler.UnobservedTaskException += (s, ev) =>
         {
@@ -53,6 +53,11 @@ public partial class App : Application
         {
             LogService.Log($"DispatcherUnhandledException: {ev.Exception}");
             ev.Handled = true;  // crash 대신 로그하고 계속
+        };
+        // (v0.2.1) ProcessExit — 정상 / 비정상 구분. 다음 시작 시 직전 종료 이유 추적 가능.
+        AppDomain.CurrentDomain.ProcessExit += (s, ev) =>
+        {
+            LogService.Log("=== ProcessExit (graceful shutdown path) ===");
         };
 
         // ── 단일 인스턴스 ────────────────────────────────────────
@@ -188,22 +193,26 @@ public partial class App : Application
         return true;
     }
 
-    /// <summary>(v0.2.0) 트레이 툴팁 — 핫키/후킹 상태 반영.</summary>
+    /// <summary>(v0.2.0/v0.2.1) 트레이 툴팁 — 핫키/후킹/모드 상태 반영.</summary>
     private void UpdateTrayStatus(bool hotkeyOk)
     {
         var ver = typeof(App).Assembly.GetName().Version;
         var verStr = ver != null ? $"v{ver.Major}.{ver.Minor}.{ver.Build}" : "";
         var hookOk = _mouseHook?.IsInstalled ?? false;
+        var hookEnabled = _settings?.Current.AutoShowOnDragSelect ?? false;
 
         string status;
-        if (!hotkeyOk && !hookOk)
-            status = $"SweetyWin {verStr} — 핫키·마우스후킹 모두 실패";
+        if (!hotkeyOk && hookEnabled && !hookOk)
+            status = $"SweetyWin {verStr} — 핫키·후킹 모두 실패";
         else if (!hotkeyOk)
             status = $"SweetyWin {verStr} — 핫키 충돌 (트레이 클릭으로 사용)";
+        else if (!hookEnabled)
+            // (v0.2.1) 핫키 모드 (default) — hook 의도적 OFF
+            status = $"SweetyWin {verStr} — 핫키 모드 (Ctrl+Shift+Space)";
         else if (!hookOk)
-            status = $"SweetyWin {verStr} — 마우스후킹 비활성 (핫키만 사용)";
+            status = $"SweetyWin {verStr} — 후킹 설치 실패 (핫키만 사용)";
         else
-            status = $"SweetyWin {verStr} — Ctrl+Shift+Space";
+            status = $"SweetyWin {verStr} — 드래그·더블클릭·Ctrl+Shift+Space";
 
         _tray?.UpdateTooltip(status);
     }

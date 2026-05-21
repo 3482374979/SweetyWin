@@ -70,10 +70,13 @@ public sealed class MouseHookService : IDisposable
                         ?? Dispatcher.CurrentDispatcher;
 
         // (v0.1.5) 전용 BG 스레드 — UI lag 와 무관하게 마우스 이벤트 처리
+        // (v0.2.1) AboveNormal priority — GC/CPU 경쟁 시 hook callback 지연 최소화 →
+        // Windows LowLevelHooksTimeout 위반 위험 감소
         _hookThread = new Thread(HookThreadProc)
         {
             IsBackground = true,
-            Name = "SweetyWin.MouseHook"
+            Name = "SweetyWin.MouseHook",
+            Priority = ThreadPriority.AboveNormal,
         };
         _hookThread.Start();
     }

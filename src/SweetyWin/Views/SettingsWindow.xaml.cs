@@ -84,8 +84,10 @@ public partial class SettingsWindow : Window
         var key = DeepLKeyBox.Password.Trim();
         s.DeepLApiKey = string.IsNullOrEmpty(key) ? null : key;
 
-        // 드래그-자동 표시 — 변경은 다음 앱 시작부터 반영 (mouse hook 재설치 필요)
-        s.AutoShowOnDragSelect = AutoShowOnDragCheck.IsChecked == true;
+        // 드래그-자동 표시 — 변경은 다음 앱 시작부터 반영 (mouse hook 설치/제거 필요)
+        var newAutoShow = AutoShowOnDragCheck.IsChecked == true;
+        var autoShowChanged = newAutoShow != s.AutoShowOnDragSelect;
+        s.AutoShowOnDragSelect = newAutoShow;
 
         // (v0.1.4) 진단 로그 — 즉시 반영
         s.EnableDiagnosticLog = DiagnosticLogCheck.IsChecked == true;
@@ -95,6 +97,15 @@ public partial class SettingsWindow : Window
 
         // 자동 시작 — 레지스트리 즉시 반영
         AutoStartService.SetEnabled(AutoStartCheck.IsChecked == true);
+
+        // (v0.2.1) AutoShow 변경 시 재시작 안내 — 사용자가 설정창 안에서 명시적으로 띄운 상황이라 OK
+        if (autoShowChanged)
+        {
+            MessageBox.Show(
+                "드래그/더블클릭 자동 표시 설정 변경은 SweetyWin 재시작 후 적용됩니다.\n" +
+                "트레이 우클릭 → 종료 → SweetyWin.exe 재실행.",
+                "SweetyWin", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
 
         DialogResult = true;
         Close();

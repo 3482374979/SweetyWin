@@ -15,8 +15,10 @@ public sealed class SweetyWinSettings
     public uint HotkeyVk { get; set; } = 0x20;       // VK_SPACE
     public uint HotkeyModifiers { get; set; } = 0x06; // MOD_CONTROL(2) | MOD_SHIFT(4)
 
-    /// <summary>드래그-선택 종료 시 자동으로 팝업 표시.</summary>
-    public bool AutoShowOnDragSelect { get; set; } = true;
+    /// <summary>드래그-선택 종료 시 자동으로 팝업 표시.
+    /// (v0.2.1) 기본 OFF — 글로벌 마우스 후킹 환경별 변동성으로 안정성 우선.
+    /// 옵트인 시만 hook 설치. 기존 사용자의 true 값은 그대로 유지(JSON 역직렬화).</summary>
+    public bool AutoShowOnDragSelect { get; set; } = false;
 
     /// <summary>드래그-자동 표시 시 선택 텍스트 최소 길이 (단일 클릭 노이즈 필터).</summary>
     public int MinAutoShowTextLength { get; set; } = 2;

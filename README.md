@@ -21,9 +21,9 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 
 ## How it works
 
-**자동 트리거 (v0.1.3+)**: 텍스트를 **드래그-선택** 하거나 **더블클릭** 으로 단어 선택 후 마우스 떼면 자동으로 팝업이 떠오릅니다. 팝업 밖을 클릭하면 자동으로 닫힙니다.
+**기본 트리거 (v0.2.1+)**: `Ctrl+Shift+Space` 핫키로 현재 선택 텍스트 캡처 → 팝업. 모든 환경에서 안정.
 
-**수동 트리거**: `Ctrl+Shift+Space` 누르면 현재 선택 텍스트로 팝업.
+**옵트인 자동 트리거**: 설정에서 활성화 시, 텍스트 **드래그-선택** / **더블클릭** 으로도 자동 팝업. 글로벌 마우스 후킹 사용 — 일부 환경에서 마우스 응답성에 영향 가능.
 
 1. Drag-select text **OR** press `Ctrl+Shift+Space` after selecting
 2. SelectionService captures the selection via UIA (no clipboard pollution); falls back to Ctrl+C + clipboard read/restore for non-UIA apps
@@ -68,7 +68,12 @@ Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\setti
 
 ## 호환성 노트
 
-**안정성 (v0.1.5+)**: WH_MOUSE_LL 후킹을 **전용 BG 스레드** 에서 실행. UI 가 무거운 작업(번역 API 호출, 렌더링) 중이어도 마우스 이벤트는 지연 없이 처리. 전역 예외 핸들러로 어떤 비정상 상황에서도 강제 종료 방지.
+**안정성 정책 (v0.2.1+)** — 기본 모드는 **핫키 전용**(`Ctrl+Shift+Space`):
+- 글로벌 마우스 후킹 없음 → 모든 환경에서 안정 (백신·다른 후킹 도구·저사양 PC 모두 안전)
+- 드래그/더블클릭 자동 표시는 **옵트인** — 설정에서 활성화 시만 `WH_MOUSE_LL` 사용
+- 후킹 사용 시 일부 환경에서 마우스 응답성/안정성 영향 가능 — 문제 시 체크 해제로 즉시 복귀
+
+**안정성 (v0.1.5+)**: WH_MOUSE_LL 후킹(활성 시)을 **전용 BG 스레드**(AboveNormal priority) 에서 실행. UI 가 무거운 작업(번역 API 호출, 렌더링) 중이어도 마우스 이벤트는 지연 없이 처리. 전역 예외 핸들러로 어떤 비정상 상황에서도 강제 종료 방지.
 
 **자동시작 & 리소스 최적화 (v0.2.0+)**:
 - HKCU\Run 경로 자가 치유 — exe 이동해도 다음 실행에서 registry 자동 갱신
