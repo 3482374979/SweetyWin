@@ -60,11 +60,11 @@
                     HorizontalAlignment="Left" Margin="0,0,0,16"
                     Click="OnOpenSettingsFile"/>
 
-            <!-- ── 동작 섹션 (v0.2.1) ──────────────────────────────── -->
+            <!-- ── 동작 섹션 (v0.2.2) ──────────────────────────────── -->
             <TextBlock Text="동작" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,12"/>
-            <CheckBox x:Name="AutoShowOnDragCheck" Content="드래그/더블클릭 자동 표시 (옵트인)"/>
-            <TextBlock Text="⚠ 글로벌 마우스 후킹(WH_MOUSE_LL)을 사용합니다. 일부 환경(백신 간섭·다른 후킹 도구 다수·저사양 PC)에서 마우스 응답성에 영향이 있을 수 있습니다. 안정성 우선 시 OFF 유지(기본). 끄더라도 Ctrl+Shift+Space 핫키는 항상 사용 가능."
-                       FontSize="11" Foreground="#D0A060" Margin="0,0,0,16" TextWrapping="Wrap"/>
+            <CheckBox x:Name="AutoShowOnDragCheck" Content="드래그/더블클릭 자동 표시"/>
+            <TextBlock Text="끄면 Ctrl+Shift+Space 핫키로만 동작. 일부 환경에서 마우스 응답성 문제 발생 시 OFF로 전환 가능."
+                       FontSize="11" Foreground="#AAAAAA" Margin="0,0,0,16" TextWrapping="Wrap"/>
 
             <!-- ── 시작 섹션 ──────────────────────────────────────────── -->
             <TextBlock Text="시작" FontSize="16" FontWeight="SemiBold" Margin="0,12,0,12"/>

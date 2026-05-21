@@ -21,9 +21,14 @@ Windows port of [Sweety](https://github.com/3482374979/Sweety) QuickPop — text
 
 ## How it works
 
-**기본 트리거 (v0.2.1+)**: `Ctrl+Shift+Space` 핫키로 현재 선택 텍스트 캡처 → 팝업. 모든 환경에서 안정.
+**기본 동작 (v0.2.2+)**: 텍스트 선택 → **즉시 자동 번역** 결과 팝업.
 
-**옵트인 자동 트리거**: 설정에서 활성화 시, 텍스트 **드래그-선택** / **더블클릭** 으로도 자동 팝업. 글로벌 마우스 후킹 사용 — 일부 환경에서 마우스 응답성에 영향 가능.
+트리거 (기본 모두 ON):
+- **드래그-선택** 종료 시 자동 팝업
+- **더블클릭** 으로 단어 선택 시 자동 팝업
+- **`Ctrl+Shift+Space`** 핫키
+
+UI 단순화 — 액션 메뉴(사전/검색) 제거. 번역 viewer 만 표시. 결과 복사 버튼 + LIPSON Inc. 각인.
 
 1. Drag-select text **OR** press `Ctrl+Shift+Space` after selecting
 2. SelectionService captures the selection via UIA (no clipboard pollution); falls back to Ctrl+C + clipboard read/restore for non-UIA apps
@@ -68,10 +73,11 @@ Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\setti
 
 ## 호환성 노트
 
-**안정성 정책 (v0.2.1+)** — 기본 모드는 **핫키 전용**(`Ctrl+Shift+Space`):
-- 글로벌 마우스 후킹 없음 → 모든 환경에서 안정 (백신·다른 후킹 도구·저사양 PC 모두 안전)
-- 드래그/더블클릭 자동 표시는 **옵트인** — 설정에서 활성화 시만 `WH_MOUSE_LL` 사용
-- 후킹 사용 시 일부 환경에서 마우스 응답성/안정성 영향 가능 — 문제 시 체크 해제로 즉시 복귀
+**v0.2.2 정책** — 번역 전용 단순화:
+- 팝업 = 번역 결과 viewer (선택 → 자동 번역 → 결과 표시)
+- 액션 메뉴(사전·검색·복사) 제거 — visual tree 축소, GDI 핸들 감소, 매 표시 비용 절감
+- 드래그/더블클릭 자동 표시 **기본 ON** (v0.2.1 의 default OFF 정책 철회)
+- 문제 시 설정 → "드래그/더블클릭 자동 표시" 체크 해제로 핫키 모드 전환
 
 **안정성 (v0.1.5+)**: WH_MOUSE_LL 후킹(활성 시)을 **전용 BG 스레드**(AboveNormal priority) 에서 실행. UI 가 무거운 작업(번역 API 호출, 렌더링) 중이어도 마우스 이벤트는 지연 없이 처리. 전역 예외 핸들러로 어떤 비정상 상황에서도 강제 종료 방지.
 

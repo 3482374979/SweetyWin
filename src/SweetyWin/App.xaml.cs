@@ -201,18 +201,18 @@ public partial class App : Application
         var hookOk = _mouseHook?.IsInstalled ?? false;
         var hookEnabled = _settings?.Current.AutoShowOnDragSelect ?? false;
 
+        // (v0.2.2) 번역 viewer 단순화 — 트레이 메시지도 간결화
         string status;
         if (!hotkeyOk && hookEnabled && !hookOk)
-            status = $"SweetyWin {verStr} — 핫키·후킹 모두 실패";
+            status = $"SweetyWin {verStr} — 트리거 모두 실패";
         else if (!hotkeyOk)
-            status = $"SweetyWin {verStr} — 핫키 충돌 (트레이 클릭으로 사용)";
+            status = $"SweetyWin {verStr} — 핫키 충돌";
         else if (!hookEnabled)
-            // (v0.2.1) 핫키 모드 (default) — hook 의도적 OFF
-            status = $"SweetyWin {verStr} — 핫키 모드 (Ctrl+Shift+Space)";
+            status = $"SweetyWin {verStr} — 핫키 모드";
         else if (!hookOk)
-            status = $"SweetyWin {verStr} — 후킹 설치 실패 (핫키만 사용)";
+            status = $"SweetyWin {verStr} — 후킹 실패 (핫키만)";
         else
-            status = $"SweetyWin {verStr} — 드래그·더블클릭·Ctrl+Shift+Space";
+            status = $"SweetyWin {verStr} — 번역 (Ctrl+Shift+Space)";
 
         _tray?.UpdateTooltip(status);
     }
