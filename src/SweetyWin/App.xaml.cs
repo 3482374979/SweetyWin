@@ -1,7 +1,9 @@
 using System;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using SweetyWin.Native;
 using SweetyWin.Services;
 using SweetyWin.Translation;
@@ -32,12 +34,26 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        // (v0.1.4) 진단 로그 활성화 여부 먼저 파악 — settings 가 가장 먼저 로드 필요.
-        // settings init 은 LogService.Init 보다 먼저 — Init 자체 메시지는 항상 기록되지만
-        // 이후 LogInfo 들이 EnableDiagnostic 토글 따름.
+        // (v0.1.4) 진단 로그 활성화 여부 먼저 파악
         var tempSettings = new SettingsService();
         LogService.EnableDiagnostic = tempSettings.Current.EnableDiagnosticLog;
         LogService.Init();
+
+        // (v0.1.5) 글로벌 예외 핸들러 — 강제 종료 방지 + 원인 로그
+        AppDomain.CurrentDomain.UnhandledException += (s, ev) =>
+        {
+            LogService.Log($"FATAL UnhandledException: {ev.ExceptionObject}");
+        };
+        TaskScheduler.UnobservedTaskException += (s, ev) =>
+        {
+            LogService.Log($"UnobservedTaskException: {ev.Exception}");
+            ev.SetObserved();
+        };
+        DispatcherUnhandledException += (s, ev) =>
+        {
+            LogService.Log($"DispatcherUnhandledException: {ev.Exception}");
+            ev.Handled = true;  // crash 대신 로그하고 계속
+        };
 
         // ── 단일 인스턴스 ────────────────────────────────────────
         _singleInstanceMutex = new Mutex(initiallyOwned: false, name: SingleInstanceMutexName, createdNew: out var created);

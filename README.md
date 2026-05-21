@@ -68,6 +68,8 @@ Tray icon → 우클릭 → **설정...** 또는 `%LOCALAPPDATA%\SweetyWin\setti
 
 ## 호환성 노트
 
+**안정성 (v0.1.5+)**: WH_MOUSE_LL 후킹을 **전용 BG 스레드** 에서 실행. UI 가 무거운 작업(번역 API 호출, 렌더링) 중이어도 마우스 이벤트는 지연 없이 처리. 전역 예외 핸들러로 어떤 비정상 상황에서도 강제 종료 방지.
+
 캡처 경로 (v0.1.3 기준, 순차 시도):
 1. **UIA TextPattern** — focused element 자신부터 ancestor 5단계까지 탐색
 2. **UIA LegacyIAccessiblePattern** (MSAA fallback) — win32 legacy 앱용
